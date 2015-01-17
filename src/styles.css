@@ -1,0 +1,125 @@
+.app {
+  display: inline-block;
+}
+
+.cell {
+  margin: 2px;
+
+  width: 50px;
+  height: 50px;
+
+  background: #eee;
+  border: 1px solid #ddd;
+  outline: none;
+
+  color: #333;
+  font-size: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#board {
+  vertical-align: top;
+  display: inline-block;
+  width: 174px;
+}
+
+#alert {
+  opacity: 0;
+  transition: opacity 1s;
+  text-align: center;
+}
+
+#alert.visible {
+  opacity: 1;
+}
+
+.bumper {
+  margin-top: 2px;
+  display: inline-block;
+  width: 5px;
+  height: 170px;
+
+  background: #5bc0de;
+
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.bumper.active {
+  opacity: 1;
+  transition: opacity 1s;
+}
+
+.gameBoard {
+  display: inline-block;
+}
+
+.player {
+  width: 100px;
+  display: inline-block;
+  vertical-align: top;
+  margin: 0 10px;
+}
+
+.playerName {
+  text-align: center;
+}
+
+.spinner {
+  margin: 24px auto;
+  width: 52px;
+  height: 52px;
+  position: relative;
+
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.spinner.active {
+  opacity: 1;
+  transition: opacity 1s;
+}
+
+.cube1, .cube2 {
+  background-color: #5bc0de;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  -webkit-animation: cubemove 1.8s infinite ease-in-out;
+  animation: cubemove 1.8s infinite ease-in-out;
+}
+
+.cube2 {
+  -webkit-animation-delay: -0.9s;
+  animation-delay: -0.9s;
+}
+
+@-webkit-keyframes cubemove {
+  25% { -webkit-transform: translateX(42px) rotate(-90deg) scale(0.5) }
+  50% { -webkit-transform: translateX(42px) translateY(42px) rotate(-180deg) }
+  75% { -webkit-transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5) }
+  100% { -webkit-transform: rotate(-360deg) }
+}
+
+@keyframes cubemove {
+  25% {
+    transform: translateX(42px) rotate(-90deg) scale(0.5);
+    -webkit-transform: translateX(42px) rotate(-90deg) scale(0.5);
+  } 50% {
+    transform: translateX(42px) translateY(42px) rotate(-179deg);
+    -webkit-transform: translateX(42px) translateY(42px) rotate(-179deg);
+  } 50.1% {
+    transform: translateX(42px) translateY(42px) rotate(-180deg);
+    -webkit-transform: translateX(42px) translateY(42px) rotate(-180deg);
+  } 75% {
+    transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5);
+    -webkit-transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5);
+  } 100% {
+    transform: rotate(-360deg);
+    -webkit-transform: rotate(-360deg);
+  }
+}
