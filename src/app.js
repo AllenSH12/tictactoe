@@ -7,17 +7,9 @@ var Player = require('./player.js');
  * a Cell component
  */
 var Cell = React.createClass({
-  getInitialState: function() {
-    return {
-      token: ""
-    };
-  },
-
   handleClick: function(e) {
     e.preventDefault();
     this.getDOMNode().blur();
-
-    debugger;
 
     if (!this.props.gameOver) {
       this.props.onClick(this.props.i);
@@ -25,52 +17,85 @@ var Cell = React.createClass({
   },
 
   render: function() {
+    var classString = !this.props.token ? 'cell' : 'cell played';
+
     return (
-      <input className='cell' onClick={this.handleClick} value={this.state.token} readOnly={true}/>
+      <input className={classString} onClick={this.handleClick} value={this.props.token} readOnly={true}/>
     );
   }
 });
 
-var GameBoard = React.createClass({
-  handleClick: function(i) {
-    var size = 3;
-    var x = Math.floor(i / size);
-    var y = i % size;
+/**
+ * the tic-tac-toe game's UI
+ */
+var Board = React.createClass({
+  getInitialState: function() {
+    var numMoves = Math.pow(this.props.size, 2);
+    var moves = [];
 
-    var newMove = {
-      x: x,
-      y: y
+    for (var i = 0; i < numMoves; i += 1) {
+      moves.push('');
+    }
+
+    return {
+      moves: moves
     };
+  },
 
-    var refString = 'cell ' + i;
-    var playedCell;
+  /**
+   * check if this cell has been played before
+   * @param {Number} i the index of the cell that was clicked
+   */
+  handleClick: function(i) {
+    var newMove;
 
-    if (this.moveAlreadyPlayed(newMove)) {
+    if (this.cellAlreadyPlayed(i)) {
+      // reject...
       this.props.onMessage('That cell has already been played.', true);
-    } else if (!this.props.gameOver) {
-      playedCell = this.refs[refString];
-      playedCell.getDOMNode().classList.add('played');
-      playedCell.setState({
-        token: 'X'
-      });
-      this.props.onNewMove(newMove);
+    } else {
+      this.playCell(i);
+      newMove = this.getMove(i);
+      // and tell the app we have a new move...
+      this.props.onMove(newMove);
     }
   },
 
   /**
-   * determine if a move has already been made
-   * @param {Object} move   the move whose availability we'd like to check
+   * get a move object to pass to other parts of the app from the cell index
+   * @param {Number} i the index of the cell for which we want an x/y coordinate object
    */
-  moveAlreadyPlayed: function(move) {
-    var gameData = this.props.gameData;
-    var x = move.x;
-    var y = move.y;
+  getMove: function(i) {
+    var size = this.props.size;
 
-    return gameData[x] && gameData[x][y];
+    return {
+      x: Math.floor(i / size),
+      y: i % size
+    };
+  },
+
+  /**
+   * store the new move and show the results of playing this cell in the UI
+   * @param {Number} i the index of the cell to activate
+   */
+  playCell: function(i) {
+    var moves = this.state.moves.slice();
+    moves[i] = this.props.activeToken;
+
+    this.setState({
+      moves: moves
+    });
+  },
+
+  /**
+   * see if a cell has already been played
+   * @param {Number} i index of a cell the user wants to play
+   */
+  cellAlreadyPlayed: function(i) {
+    return this.state.moves.indexOf(i) >= 0;
   },
 
   render: function() {
-    var cells = [1,2,3,4,5,6,7,8,9];
+    var cells = this.state.moves;
 
     return (
       <div className="gameBoard">
@@ -81,6 +106,7 @@ var GameBoard = React.createClass({
                   onClick={this.handleClick}
                   key={i}
                   i={i}
+                  token={cell}
                   ref={'cell ' + i}/>
           );
         }, this)}
@@ -96,14 +122,13 @@ var App = React.createClass({
 
     return {
       game: game,
-      players: ['X', cpuPlayer],
-      activePlayer: 0
+      players: ['X', cpuPlayer]
     };
   },
 
   /**
-   * update the game state w/ a user's latest move, this potentially includes
-   * calling takeCpuTurn() to complete one 'tick' of the game state
+   * update the game state w/ the newest move, if the cpu is active after the new
+   * move get it's choice of move and keep the game moving
    * @param {Object} newMove a generic object w/ the move to play (x & y coords as props)
    */
   playMove: function(newMove) {
@@ -112,48 +137,34 @@ var App = React.createClass({
     // want to play the move so we can then ask the GameBoard if there are any winning moves...
     game.makeMove(newMove);
 
+    this.setState({
+      game: game
+    });
+
     var _this = this;
 
     if (game.isOver()) {
       // determine why the game ended (winning or full)
       this.endGame(game);
-    } else {
-      this.updateUI();
-      document.getElementsByClassName('spinner')[0].classList.add('active');
+    } else if (game.activePlayer() === 'O') {
+      // it's the cpu's turn...
       setTimeout(function() {
-        _this.takeCpuTurn();
+        var cpu = _this.state.players[1];
+        var cpuMove = cpu.getMove(game);
+
+        _this.playMove(cpuMove);
+
+        // figure out which cell this move belongs to and mark it in a copy
+        // of the playedMoves from the board ref
+        var cellIndex = 3 * cpuMove.x + cpuMove.y;
+        var playedMoves = _this.refs.board.state.moves.slice();
+        playedMoves[cellIndex] = 'O';
+
+        // upate the board refs state so the UI re-draws
+        _this.refs.board.setState({
+          moves: playedMoves
+        });
       }, 1000);
-    }
-  },
-
-  /**
-  * everything related to getting the computer player's move and progressing
-  * the game as a result
-  */
-  takeCpuTurn: function() {
-    // give cpu the board and get it's move in return
-    var cpu = this.state.players[1];
-    var game = this.state.game;
-    var cpuMove = cpu.getMove(game);
-
-    // play the move
-    game.makeMove(cpuMove);
-
-    var cellIndex = 3 * cpuMove.x + cpuMove.y;
-    var refString = 'cell ' + cellIndex;
-    var cellPlayed = this.refs.board.refs[refString];
-
-    cellPlayed.getDOMNode().classList.add('played');
-    cellPlayed.setState({
-      token: 'O'
-    });
-
-    // if game over do stuff
-    if (game.isOver()) {
-      // determine why the game ended (winning or full)
-      this.endGame(game);
-    } else {
-      this.updateUI();
     }
   },
 
@@ -162,37 +173,10 @@ var App = React.createClass({
   * @param {Game} game  the game to clean up after
   */
   endGame: function(game) {
-    var bumpers;
-    var i;
-    var winningBumperString;
-    var winningBumper;
-    var msg;
-
-    // save the final game state
-    this.setState({
-      game: game
-    });
-
-    // hide the spinner
-    document.getElementsByClassName('spinner')[0].classList.remove('active');
-
-    if (game.winner) {
-      winningBumperString = game.winner === 'X' ? 'bumperLeft' : 'bumperRight';
-      winningBumper = document.getElementsByClassName(winningBumperString)[0];
-      winningBumper.classList.add('active');
-      msg = game.winner + ' wins!';
-    } else {
-      // draw...
-      bumpers = document.getElementsByClassName('bumper');
-      for (i = 0; i < bumpers.length; i += 1) {
-        bumpers[i].classList.add('active');
-      }
-      msg = 'The game was a draw.';
-    }
+    var msg = game.winner ? game.winner + ' wins!' : 'The game was a draw.';
 
     this.showMessage(msg, false);
   },
-
 
   /**
   * alert the user to some message
@@ -210,25 +194,22 @@ var App = React.createClass({
     }
   },
 
-  playCell: function() {
-
-  },
-
-  /**
-  * make any UI changes that need to be made in between turns
-  */
-  updateUI: function() {
-    this.setState({
-      activePlayer: (this.state.activePlayer + 1) % 2
-    });
-
-    // if it was the cpu's turn and the thinking spinner was active disable it
-    document.getElementsByClassName('spinner')[0].classList.remove('active');
-  },
-
   render: function() {
-    var activePlayer = this.state.activePlayer;
+    var activePlayer = this.state.game.activePlayer();
     var gameOver = this.state.game.isOver();
+    var winner = this.state.game.winner;
+    var tieGame = gameOver && !winner;
+
+    var lBumperStr = 'bumper bumperLeft';
+    var rBumperStr = 'bumper bumperRight';
+    var leftBumperClassString = activePlayer === 'X' ? lBumperStr + ' active' : lBumperStr;
+    var rightBumperClassString = activePlayer === 'O' ? rBumperStr + ' active' : rBumperStr;
+    var spinnerClassString = activePlayer === 'O' && !gameOver ? 'spinner active' : 'spinner';
+
+    if (gameOver) {
+      leftBumperClassString = winner === 'X' || tieGame ? lBumperStr + ' active' : lBumperStr;
+      rightBumperClassString = winner === 'O' || tieGame ? rBumperStr + ' active' : rBumperStr;
+    }
 
     return (
       <div className="app">
@@ -236,19 +217,20 @@ var App = React.createClass({
           <h3 className="playerName">Human</h3>
         </div>
         <div className="gameBoard">
-          <div className={activePlayer === 0 ? 'bumper bumperLeft active' : 'bumper bumperLeft'}></div>
+          <div className={leftBumperClassString}></div>
           <div id="board">
-            <GameBoard ref={'board'}
-                      onMessage={this.showMessage}
-                      onNewMove={this.playMove}
-                      gameData={this.state.game.data}
-                      gameOver={gameOver}/>
+            <Board ref={'board'}
+                    size={this.state.game.size}
+                    activeToken={activePlayer}
+                    onMessage={this.showMessage}
+                    onMove={this.playMove}
+                    gameOver={gameOver}/>
           </div>
-          <div className={activePlayer === 1 ? 'bumper bumperRight active' : 'bumper bumperRight'}></div>
+          <div className={rightBumperClassString}></div>
         </div>
         <div className="player">
           <h3 className="playerName">Computer</h3>
-          <div className="spinner">
+          <div className={spinnerClassString}>
             <div className="cube1"></div>
             <div className="cube2"></div>
           </div>
