@@ -18,6 +18,10 @@
   cursor: pointer;
 }
 
+.cell.played {
+  cursor: not-allowed;
+}
+
 #board {
   vertical-align: top;
   display: inline-block;

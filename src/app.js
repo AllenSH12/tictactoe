@@ -3,6 +3,9 @@ var React = require('react');
 var Game = require('./game.js');
 var Player = require('./player.js');
 
+/**
+ * a Cell component
+ */
 var Cell = React.createClass({
   getInitialState: function() {
     return {
@@ -12,15 +15,13 @@ var Cell = React.createClass({
 
   handleClick: function(e) {
     e.preventDefault();
-
-    if (!this.state.token) {
-      this.setState({
-        token: 'X'
-      });
-    }
-
     this.getDOMNode().blur();
-    this.props.onClick(this.props.x, this.props.y);
+
+    debugger;
+
+    if (!this.props.gameOver) {
+      this.props.onClick(this.props.i);
+    }
   },
 
   render: function() {
@@ -31,15 +32,27 @@ var Cell = React.createClass({
 });
 
 var GameBoard = React.createClass({
-  handleClick: function(x, y) {
+  handleClick: function(i) {
+    var size = 3;
+    var x = Math.floor(i / size);
+    var y = i % size;
+
     var newMove = {
       x: x,
       y: y
     };
 
+    var refString = 'cell ' + i;
+    var playedCell;
+
     if (this.moveAlreadyPlayed(newMove)) {
       this.props.onMessage('That cell has already been played.', true);
-    } else {
+    } else if (!this.props.gameOver) {
+      playedCell = this.refs[refString];
+      playedCell.getDOMNode().classList.add('played');
+      playedCell.setState({
+        token: 'X'
+      });
       this.props.onNewMove(newMove);
     }
   },
@@ -57,20 +70,17 @@ var GameBoard = React.createClass({
   },
 
   render: function() {
-    var size = 3;
     var cells = [1,2,3,4,5,6,7,8,9];
 
     return (
       <div className="gameBoard">
         {cells.map(function(cell, i) {
-          var x = Math.floor(i / size);
-          var y = i % size;
           return (
             <Cell className='cell'
+                  gameOver={this.props.gameOver}
                   onClick={this.handleClick}
                   key={i}
-                  x={x}
-                  y={y}
+                  i={i}
                   ref={'cell ' + i}/>
           );
         }, this)}
@@ -131,8 +141,10 @@ var App = React.createClass({
 
     var cellIndex = 3 * cpuMove.x + cpuMove.y;
     var refString = 'cell ' + cellIndex;
+    var cellPlayed = this.refs.board.refs[refString];
 
-    this.refs.board.refs[refString].setState({
+    cellPlayed.getDOMNode().classList.add('played');
+    cellPlayed.setState({
       token: 'O'
     });
 
@@ -155,6 +167,11 @@ var App = React.createClass({
     var winningBumperString;
     var winningBumper;
     var msg;
+
+    // save the final game state
+    this.setState({
+      game: game
+    });
 
     // hide the spinner
     document.getElementsByClassName('spinner')[0].classList.remove('active');
@@ -193,6 +210,10 @@ var App = React.createClass({
     }
   },
 
+  playCell: function() {
+
+  },
+
   /**
   * make any UI changes that need to be made in between turns
   */
@@ -207,6 +228,7 @@ var App = React.createClass({
 
   render: function() {
     var activePlayer = this.state.activePlayer;
+    var gameOver = this.state.game.isOver();
 
     return (
       <div className="app">
@@ -219,7 +241,8 @@ var App = React.createClass({
             <GameBoard ref={'board'}
                       onMessage={this.showMessage}
                       onNewMove={this.playMove}
-                      gameData={this.state.game.data}/>
+                      gameData={this.state.game.data}
+                      gameOver={gameOver}/>
           </div>
           <div className={activePlayer === 1 ? 'bumper bumperRight active' : 'bumper bumperRight'}></div>
         </div>
