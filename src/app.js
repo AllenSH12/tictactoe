@@ -2,118 +2,7 @@ var React = require('react');
 
 var Game = require('./game.js');
 var Player = require('./player.js');
-
-/**
- * a Cell component
- */
-var Cell = React.createClass({
-  handleClick: function(e) {
-    e.preventDefault();
-    this.getDOMNode().blur();
-
-    if (!this.props.gameOver) {
-      this.props.onClick(this.props.i);
-    }
-  },
-
-  render: function() {
-    var classString = !this.props.token ? 'cell' : 'cell played';
-
-    return (
-      <input className={classString} onClick={this.handleClick} value={this.props.token} readOnly={true}/>
-    );
-  }
-});
-
-/**
- * the tic-tac-toe game's UI
- */
-var Board = React.createClass({
-  getInitialState: function() {
-    var numMoves = Math.pow(this.props.size, 2);
-    var moves = [];
-
-    for (var i = 0; i < numMoves; i += 1) {
-      moves.push('');
-    }
-
-    return {
-      moves: moves
-    };
-  },
-
-  /**
-   * check if this cell has been played before
-   * @param {Number} i the index of the cell that was clicked
-   */
-  handleClick: function(i) {
-    var newMove;
-
-    if (this.cellAlreadyPlayed(i)) {
-      // reject...
-      this.props.onMessage('That cell has already been played.', true);
-    } else {
-      this.playCell(i);
-      newMove = this.getMove(i);
-      // and tell the app we have a new move...
-      this.props.onMove(newMove);
-    }
-  },
-
-  /**
-   * get a move object to pass to other parts of the app from the cell index
-   * @param {Number} i the index of the cell for which we want an x/y coordinate object
-   */
-  getMove: function(i) {
-    var size = this.props.size;
-
-    return {
-      x: Math.floor(i / size),
-      y: i % size
-    };
-  },
-
-  /**
-   * store the new move and show the results of playing this cell in the UI
-   * @param {Number} i the index of the cell to activate
-   */
-  playCell: function(i) {
-    var moves = this.state.moves.slice();
-    moves[i] = this.props.activeToken;
-
-    this.setState({
-      moves: moves
-    });
-  },
-
-  /**
-   * see if a cell has already been played
-   * @param {Number} i index of a cell the user wants to play
-   */
-  cellAlreadyPlayed: function(i) {
-    return this.state.moves.indexOf(i) >= 0;
-  },
-
-  render: function() {
-    var cells = this.state.moves;
-
-    return (
-      <div className="gameBoard">
-        {cells.map(function(cell, i) {
-          return (
-            <Cell className='cell'
-                  gameOver={this.props.gameOver}
-                  onClick={this.handleClick}
-                  key={i}
-                  i={i}
-                  token={cell}
-                  ref={'cell ' + i}/>
-          );
-        }, this)}
-      </div>
-    );
-  }
-});
+var Board = require('./components/board.jsx');
 
 var App = React.createClass({
   getInitialState: function() {
@@ -156,7 +45,7 @@ var App = React.createClass({
 
         // figure out which cell this move belongs to and mark it in a copy
         // of the playedMoves from the board ref
-        var cellIndex = 3 * cpuMove.x + cpuMove.y;
+        var cellIndex = game.size * cpuMove.x + cpuMove.y;
         var playedMoves = _this.refs.board.state.moves.slice();
         playedMoves[cellIndex] = 'O';
 
