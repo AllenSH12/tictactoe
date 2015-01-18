@@ -1,17 +1,17 @@
 var React = require('react');
 
 /**
-* A Cell component, basically an HTML input that proxies clicks to
+* A Cell component, basically an HTML input that proxies clicks to the Board UI
+* and displays the token of a played cell to the user
 */
 var Cell = React.createClass({
   handleClick: function(e) {
     e.preventDefault();
     this.getDOMNode().blur();
 
-    if (this.props.token !== '' && !this.props.gameOver) {
+    if (this.props.token !== '') {
       this.props.onMessage('This cell has already been played.', true);
-
-    } else if (!this.props.gameOver) {
+    } else {
       // this cell hasn't been played yet, click handler is in play...
       this.props.onClick(this.props.i);
     }
@@ -102,15 +102,15 @@ var Board = React.createClass({
 
   render: function() {
     var cells = this.state.moves;
+    var boardActive = this.state.clickable || this.props.gameOver;
 
     return (
-      <div className={this.props.blocking ? "gameBoard inactive" : "gameBoard"}>
+      <div className={boardActive ? 'gameBoard' : 'gameBoard inactive'}>
         {cells.map(function(cell, i) {
           return (
             <Cell className='cell'
-                  gameOver={this.props.gameOver}
                   onClick={this.handleClick}
-                  clickable={this.state.clickable}
+                  clickable={!this.props.gameOver ? this.state.clickable : false}
                   key={i}
                   i={i}
                   token={cell}
@@ -118,7 +118,7 @@ var Board = React.createClass({
                   ref={'cell ' + i}/>
           );
         }, this)}
-        <div className={this.props.blocking ? 'spinner active' : 'spinner'}>
+        <div className={boardActive ? 'spinner' : 'spinner active'}>
           <div className="cube1"></div>
           <div className="cube2"></div>
         </div>

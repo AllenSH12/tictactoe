@@ -93,8 +93,6 @@ var App = React.createClass({
     var winner = this.state.game.winner;
     var tieGame = gameOver && !winner;
 
-    var blocking = activePlayer === 'O' && !gameOver;
-
     var playerClass = 'player';
     var humanPlayerClass = (activePlayer === 'X') ? playerClass + ' active' : playerClass;
     var cpuPlayerClass = (activePlayer === 'O') ? playerClass + ' active' : playerClass;
@@ -129,8 +127,7 @@ var App = React.createClass({
                       activeToken={activePlayer}
                       onMessage={this.showMessage}
                       onMove={this.playMove}
-                      gameOver={gameOver}
-                      blocking={blocking}/>
+                      gameOver={gameOver}/>
                 <p id="alert">That cell has already been played.</p>
               </div>
             </div>
