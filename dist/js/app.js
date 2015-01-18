@@ -81,6 +81,24 @@ var App = React.createClass({displayName: "App",
     }
   },
 
+  /**
+   * create a new Game and overwrite the game in state, resetting
+   * the UI as a result
+   * @param {Event} e click event
+   */
+  resetGame: function(e) {
+    e.preventDefault();
+
+    this.showMessage('', false);
+
+    this.refs.board.setState({ clickable: true });
+
+    var newGame = new Game();
+    this.setState({
+      game: newGame
+    });
+  },
+
   render: function() {
     var activePlayer = this.state.game.activePlayer();
     var gameOver = this.state.game.isOver();
@@ -136,8 +154,13 @@ var App = React.createClass({displayName: "App",
                     onMessage: this.showMessage, 
                     onMove: this.playMove, 
                     gameOver: gameOver}), 
-              React.createElement("p", {id: "alert"}, "That cell has already been played.")
+              React.createElement("p", {id: "alert"})
             )
+          )
+        ), 
+        React.createElement("div", {className: "row"}, 
+          React.createElement("div", {className: "col-md-6 col-md-offset-3 controls"}, 
+            React.createElement("button", {className: "btn btn-default btn-block", onClick: this.resetGame, disabled: !gameOver}, "Reset")
           )
         )
       )
