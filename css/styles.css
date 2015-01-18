@@ -1,0 +1,128 @@
+.player {
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  padding: 0 10px;
+}
+
+.player.active {
+  background: #d9edf7;
+}
+
+.player.winner {
+  background: #dff0d8;
+}
+
+.gameContainer {
+  margin-top: 10px;
+
+  padding-top: 26px;
+  border: 1px solid #ddd;
+}
+
+.gameBoard {
+  position: relative;
+  margin: 0 auto;
+  overflow: visible;
+  width: 162px;
+
+  transition: opacity 1s;
+}
+
+.gameBoard.inactive {
+  opacity: 0.5;
+}
+
+.cell {
+  margin: 2px;
+
+  width: 50px;
+  height: 50px;
+
+  background: #eee;
+  border: 1px solid #ddd;
+  outline: none;
+
+  color: #333;
+  font-size: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.cell.played {
+  cursor: not-allowed;
+}
+
+#alert {
+  font-size: 18px;
+  margin-top: 5px;
+  opacity: 0;
+  transition: opacity 1s;
+  text-align: center;
+}
+
+#alert.visible {
+  opacity: 1;
+}
+
+/* http://tobiasahlin.com/spinkit/ */
+.spinner {
+  margin: -42px 0 0 -42px;
+  width: 84px;
+  height: 84px;
+  top: 50%;
+  left: 50%;
+  position: absolute;
+
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.spinner.active {
+  opacity: 1;
+  transition: opacity 1s;
+}
+
+.cube1, .cube2 {
+  background-color: #337ab7;
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  -webkit-animation: cubemove 1.8s infinite ease-in-out;
+  animation: cubemove 1.8s infinite ease-in-out;
+}
+
+.cube2 {
+  /* -webkit-animation-delay: -0.9s; */
+  animation-delay: -0.9s;
+}
+
+@-webkit-keyframes cubemove {
+  25% { -webkit-transform: translateX(54px) rotate(-90deg) scale(0.2) }
+  50% { -webkit-transform: translateX(54px) translateY(54px) rotate(-180deg) }
+  75% { -webkit-transform: translateX(0px) translateY(54px) rotate(-270deg) scale(0.2) }
+  100% { -webkit-transform: rotate(-360deg) }
+}
+
+@keyframes cubemove {
+  25% {
+    transform: translateX(54px) rotate(-90deg) scale(0.5);
+    -webkit-transform: translateX(54px) rotate(-90deg) scale(0.5);
+  } 50% {
+    transform: translateX(54px) translateY(54px) rotate(-179deg);
+    -webkit-transform: translateX(54px) translateY(54px) rotate(-179deg);
+  } 50.1% {
+    transform: translateX(54px) translateY(54px) rotate(-180deg);
+    -webkit-transform: translateX(54px) translateY(54px) rotate(-180deg);
+  } 75% {
+    transform: translateX(0px) translateY(54px) rotate(-270deg) scale(0.5);
+    -webkit-transform: translateX(0px) translateY(54px) rotate(-270deg) scale(0.5);
+  } 100% {
+    transform: rotate(-360deg);
+    -webkit-transform: rotate(-360deg);
+  }
+}
