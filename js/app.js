@@ -8,14 +8,13 @@ var Board = require('./components/board.jsx');
 var App = React.createClass({displayName: "App",
   getInitialState: function() {
     var game = new Game();
-    var cpuPlayer = new Player('O');
 
-    // track playedMoves outside of state since it won't impact UI
+    // track playedMoves and players outside of state since they won't impact UI
     this.playedMoves = [];
+    this.players = ['X', this.getNewPlayer('O')];
 
     return {
-      game: game,
-      players: ['X', cpuPlayer]
+      game: game
     };
   },
 
@@ -25,38 +24,25 @@ var App = React.createClass({displayName: "App",
    * @param {Object} newMove a generic object w/ the move to play (x & y coords as props)
    */
   playMove: function(newMove, skipCpu) {
-    this.playedMoves.push(newMove);
-
     var game = this.state.game;
 
     // play the move so we can ask the Game if there are any winning moves...
     game.makeMove(newMove);
 
+    // update the App component's internal state
+    this.playedMoves.push(newMove);
     this.setState({
       game: game
     });
 
-    var _this = this;
+    // figure out if this player is a computer (Worker) or human
+    var activePlayer = this.players[this.state.game.activePlayerIndex];
+    var playerIsCpu = activePlayer.toString() === "[object Worker]";
 
     if (game.isOver()) {
-      // determine why the game ended (winning or full)
       this.endGame(game);
-    } else if (game.activePlayer() === 'O' && !skipCpu) {
-      // it's the cpu's turn...
-      setTimeout(function() {
-        var cpu = _this.state.players[1];
-        var cpuMove = cpu.getMove(game);
-
-        _this.playMove(cpuMove);
-
-        // execute this async so click events have a chance to get rejected
-        setTimeout(function(){
-          // upate the board refs state so the UI re-draws
-          _this.refs.board.setState({
-            clickable: true
-          });
-        }, 0);
-      }, 1000);
+    } else if (playerIsCpu && !skipCpu) {
+      activePlayer.postMessage({ type: 'newMove', data: game.data});
     }
   },
 
@@ -94,6 +80,18 @@ var App = React.createClass({displayName: "App",
   resetGame: function(e) {
     e.preventDefault();
 
+    this.pendingReset = true;
+
+    // reset any Worker players and replace each w/ a new Worker
+    this.players = this.players.map(function(player) {
+      if (player.toString() === "[object Worker]" ) {
+        player.terminate();
+        return this.getNewPlayer(player.token);
+      } else {
+        return player;
+      }
+    }, this);
+
     this.showMessage('', false);
     this.playedMoves = [];
     this.refs.board.setState({ clickable: true });
@@ -119,8 +117,44 @@ var App = React.createClass({displayName: "App",
 
       setTimeout(function() {
         _this.playMove(play, true);
-      }, delay)
+      }, delay);
     });
+  },
+
+  /**
+   * create a new Worker for the App to use and assign the callback
+   * to fire when it has a new move to play
+   * @TODO fall back to a conventional Player?
+   */
+  getNewPlayer: function(token) {
+    var worker;
+
+    if (!!window.Worker) {
+      worker = new Worker('./js/worker.js');
+
+      worker.postMessage({ type: 'setToken', data: token });
+      worker.token = token;
+
+      worker.onmessage = function(e) {
+        var _this = this;
+        console.log('answer received');
+
+        // delay so it seems like the cpu is thinking a bit :)
+        setTimeout(function() {
+          console.log(_this.pendingReset);
+          if (!_this.pendingReset) {
+            _this.playMove(e.data);
+            _this.refs.board.setState({
+              clickable: true
+            });
+          } else {
+            _this.pendingReset = false;
+          }
+        }, 10000);
+      }.bind(this);
+    }
+
+    return worker;
   },
 
   render: function() {
@@ -184,7 +218,7 @@ var App = React.createClass({displayName: "App",
         ), 
         React.createElement("div", {className: "row controls"}, 
           React.createElement("div", {className: "col-md-3 col-md-offset-3"}, 
-            React.createElement("button", {className: "btn btn-default btn-block", onClick: this.resetGame, disabled: !gameOver}, "Reset")
+            React.createElement("button", {className: "btn btn-default btn-block", onClick: this.resetGame}, "Reset")
           ), 
           React.createElement("div", {className: "col-md-3"}, 
             React.createElement("button", {className: "btn btn-default btn-block", onClick: this.replayGame, disabled: !gameOver}, "Replay")
