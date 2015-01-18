@@ -21,8 +21,13 @@ gulp.task('html', function () {
       .pipe(gulp.dest('./dist/'));
 });
 
+gulp.task('worker', function() {
+  gulp.src('./src/worker.js')
+      .pipe(gulp.dest('./dist/js/'));
+});
+
 gulp.task('watch', function() {
   gulp.watch('./src/**/*.*', ['app']);
 });
 
-gulp.task('app', ['bundle', 'html', 'css']);
+gulp.task('app', ['bundle', 'html', 'css', 'worker']);
