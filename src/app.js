@@ -43,17 +43,10 @@ var App = React.createClass({
 
         _this.playMove(cpuMove);
 
-        // figure out which cell this move belongs to and mark it in a copy
-        // of the playedMoves from the board ref
-        var cellIndex = game.size * cpuMove.x + cpuMove.y;
-        var playedMoves = _this.refs.board.state.moves.slice();
-        playedMoves[cellIndex] = 'O';
-
         // execute this async so click events have a chance to get rejected
         setTimeout(function(){
           // upate the board refs state so the UI re-draws
           _this.refs.board.setState({
-            moves: playedMoves,
             clickable: true
           });
         }, 0);
@@ -93,6 +86,22 @@ var App = React.createClass({
     var winner = this.state.game.winner;
     var tieGame = gameOver && !winner;
 
+    var moves = [];
+    var row;
+    var i;
+    var j;
+
+    for (i = 0; i < this.state.game.size; i++) {
+      row = this.state.game.data[i];
+      if (!row) {
+        moves.push('', '', '');
+      } else {
+        for (j = 0; j < this.state.game.size; j++) {
+          moves.push(row[j] ? row[j] : '');
+        }
+      }
+    }
+
     var playerClass = 'player';
     var humanPlayerClass = (activePlayer === 'X') ? playerClass + ' active' : playerClass;
     var cpuPlayerClass = (activePlayer === 'O') ? playerClass + ' active' : playerClass;
@@ -103,33 +112,30 @@ var App = React.createClass({
     }
 
     return (
-      <div className="app">
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-md-3 col-md-offset-3">
-              <div className={humanPlayerClass}>
-                <h4 className="playerTitle">Player - 'X'</h4>
-              </div>
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col-md-3 col-md-offset-3">
+            <div className={humanPlayerClass}>
+              <h4 className="playerTitle">Player - 'X'</h4>
             </div>
-            <div className="col-md-3">
-              <div className={cpuPlayerClass}>
-                <h4 className="playerTitle">Computer - 'O'</h4>
-              </div>
+          </div>
+          <div className="col-md-3">
+            <div className={cpuPlayerClass}>
+              <h4 className="playerTitle">Computer - 'O'</h4>
             </div>
           </div>
         </div>
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-md-6 col-md-offset-3">
-              <div className="gameContainer">
-                <Board ref={'board'}
-                      size={this.state.game.size}
-                      activeToken={activePlayer}
-                      onMessage={this.showMessage}
-                      onMove={this.playMove}
-                      gameOver={gameOver}/>
-                <p id="alert">That cell has already been played.</p>
-              </div>
+        <div className="row">
+          <div className="col-md-6 col-md-offset-3">
+            <div className="gameContainer">
+              <Board ref={'board'}
+                    size={this.state.game.size}
+                    moves={moves}
+                    activeToken={activePlayer}
+                    onMessage={this.showMessage}
+                    onMove={this.playMove}
+                    gameOver={gameOver}/>
+              <p id="alert">That cell has already been played.</p>
             </div>
           </div>
         </div>

@@ -43,15 +43,7 @@ var Cell = React.createClass({
 */
 var Board = React.createClass({
   getInitialState: function() {
-    var numMoves = Math.pow(this.props.size, 2);
-    var moves = [];
-
-    for (var i = 0; i < numMoves; i += 1) {
-      moves.push('');
-    }
-
     return {
-      moves: moves,
       clickable: true
     };
   },
@@ -65,12 +57,9 @@ var Board = React.createClass({
     this.setState({
       clickable: false
     });
-    var newMove;
-
-    this.playCell(i);
 
     // and tell the app we have a new move...
-    newMove = this.getMove(i);
+    var newMove = this.getMove(i);
     this.props.onMove(newMove);
   },
 
@@ -87,26 +76,12 @@ var Board = React.createClass({
     };
   },
 
-  /**
-  * Store the new move to update cell UI
-  * @param {Number} i the index of the cell to activate
-  */
-  playCell: function(i) {
-    var moves = this.state.moves.slice();
-    moves[i] = this.props.activeToken;
-
-    this.setState({
-      moves: moves
-    });
-  },
-
   render: function() {
-    var cells = this.state.moves;
     var boardActive = this.state.clickable || this.props.gameOver;
 
     return (
       <div className={boardActive ? 'gameBoard' : 'gameBoard inactive'}>
-        {cells.map(function(cell, i) {
+        {this.props.moves.map(function(cell, i) {
           return (
             <Cell className='cell'
                   onClick={this.handleClick}

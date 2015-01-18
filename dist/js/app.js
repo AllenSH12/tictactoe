@@ -44,17 +44,10 @@ var App = React.createClass({displayName: "App",
 
         _this.playMove(cpuMove);
 
-        // figure out which cell this move belongs to and mark it in a copy
-        // of the playedMoves from the board ref
-        var cellIndex = game.size * cpuMove.x + cpuMove.y;
-        var playedMoves = _this.refs.board.state.moves.slice();
-        playedMoves[cellIndex] = 'O';
-
         // execute this async so click events have a chance to get rejected
         setTimeout(function(){
           // upate the board refs state so the UI re-draws
           _this.refs.board.setState({
-            moves: playedMoves,
             clickable: true
           });
         }, 0);
@@ -94,6 +87,22 @@ var App = React.createClass({displayName: "App",
     var winner = this.state.game.winner;
     var tieGame = gameOver && !winner;
 
+    var moves = [];
+    var row;
+    var i;
+    var j;
+
+    for (i = 0; i < this.state.game.size; i++) {
+      row = this.state.game.data[i];
+      if (!row) {
+        moves.push('', '', '');
+      } else {
+        for (j = 0; j < this.state.game.size; j++) {
+          moves.push(row[j] ? row[j] : '');
+        }
+      }
+    }
+
     var playerClass = 'player';
     var humanPlayerClass = (activePlayer === 'X') ? playerClass + ' active' : playerClass;
     var cpuPlayerClass = (activePlayer === 'O') ? playerClass + ' active' : playerClass;
@@ -104,33 +113,30 @@ var App = React.createClass({displayName: "App",
     }
 
     return (
-      React.createElement("div", {className: "app"}, 
-        React.createElement("div", {className: "container-fluid"}, 
-          React.createElement("div", {className: "row"}, 
-            React.createElement("div", {className: "col-md-3 col-md-offset-3"}, 
-              React.createElement("div", {className: humanPlayerClass}, 
-                React.createElement("h4", {className: "playerTitle"}, "Player - 'X'")
-              )
-            ), 
-            React.createElement("div", {className: "col-md-3"}, 
-              React.createElement("div", {className: cpuPlayerClass}, 
-                React.createElement("h4", {className: "playerTitle"}, "Computer - 'O'")
-              )
+      React.createElement("div", {className: "container-fluid"}, 
+        React.createElement("div", {className: "row"}, 
+          React.createElement("div", {className: "col-md-3 col-md-offset-3"}, 
+            React.createElement("div", {className: humanPlayerClass}, 
+              React.createElement("h4", {className: "playerTitle"}, "Player - 'X'")
+            )
+          ), 
+          React.createElement("div", {className: "col-md-3"}, 
+            React.createElement("div", {className: cpuPlayerClass}, 
+              React.createElement("h4", {className: "playerTitle"}, "Computer - 'O'")
             )
           )
         ), 
-        React.createElement("div", {className: "container-fluid"}, 
-          React.createElement("div", {className: "row"}, 
-            React.createElement("div", {className: "col-md-6 col-md-offset-3"}, 
-              React.createElement("div", {className: "gameContainer"}, 
-                React.createElement(Board, {ref: 'board', 
-                      size: this.state.game.size, 
-                      activeToken: activePlayer, 
-                      onMessage: this.showMessage, 
-                      onMove: this.playMove, 
-                      gameOver: gameOver}), 
-                React.createElement("p", {id: "alert"}, "That cell has already been played.")
-              )
+        React.createElement("div", {className: "row"}, 
+          React.createElement("div", {className: "col-md-6 col-md-offset-3"}, 
+            React.createElement("div", {className: "gameContainer"}, 
+              React.createElement(Board, {ref: 'board', 
+                    size: this.state.game.size, 
+                    moves: moves, 
+                    activeToken: activePlayer, 
+                    onMessage: this.showMessage, 
+                    onMove: this.playMove, 
+                    gameOver: gameOver}), 
+              React.createElement("p", {id: "alert"}, "That cell has already been played.")
             )
           )
         )
@@ -18477,15 +18483,7 @@ var Cell = React.createClass({displayName: "Cell",
 */
 var Board = React.createClass({displayName: "Board",
   getInitialState: function() {
-    var numMoves = Math.pow(this.props.size, 2);
-    var moves = [];
-
-    for (var i = 0; i < numMoves; i += 1) {
-      moves.push('');
-    }
-
     return {
-      moves: moves,
       clickable: true
     };
   },
@@ -18499,12 +18497,9 @@ var Board = React.createClass({displayName: "Board",
     this.setState({
       clickable: false
     });
-    var newMove;
-
-    this.playCell(i);
 
     // and tell the app we have a new move...
-    newMove = this.getMove(i);
+    var newMove = this.getMove(i);
     this.props.onMove(newMove);
   },
 
@@ -18521,26 +18516,12 @@ var Board = React.createClass({displayName: "Board",
     };
   },
 
-  /**
-  * Store the new move to update cell UI
-  * @param {Number} i the index of the cell to activate
-  */
-  playCell: function(i) {
-    var moves = this.state.moves.slice();
-    moves[i] = this.props.activeToken;
-
-    this.setState({
-      moves: moves
-    });
-  },
-
   render: function() {
-    var cells = this.state.moves;
     var boardActive = this.state.clickable || this.props.gameOver;
 
     return (
       React.createElement("div", {className: boardActive ? 'gameBoard' : 'gameBoard inactive'}, 
-        cells.map(function(cell, i) {
+        this.props.moves.map(function(cell, i) {
           return (
             React.createElement(Cell, {className: "cell", 
                   onClick: this.handleClick, 
