@@ -18435,7 +18435,8 @@ module.exports = require('./lib/React');
 var React = require('react');
 
 /**
-* A Cell component, basically an HTML input that proxies clicks to
+* A Cell component, basically an HTML input that proxies clicks to the Board UI
+* and displays the token of a played cell to the user
 */
 var Cell = React.createClass({displayName: "Cell",
   handleClick: function(e) {
