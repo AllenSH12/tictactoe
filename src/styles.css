@@ -22,7 +22,7 @@
 .gameBoard {
   position: relative;
   margin: 0 auto;
-  overflow: auto;
+  overflow: visible;
   width: 162px;
 
   transition: opacity 1s;

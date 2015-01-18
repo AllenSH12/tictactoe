@@ -49,10 +49,14 @@ var App = React.createClass({
         var playedMoves = _this.refs.board.state.moves.slice();
         playedMoves[cellIndex] = 'O';
 
-        // upate the board refs state so the UI re-draws
-        _this.refs.board.setState({
-          moves: playedMoves
-        });
+        // execute this async so click events have a chance to get rejected
+        setTimeout(function(){
+          // upate the board refs state so the UI re-draws
+          _this.refs.board.setState({
+            moves: playedMoves,
+            clickable: true
+          });
+        }, 0);
       }, 1000);
     }
   },

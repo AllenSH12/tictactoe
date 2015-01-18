@@ -6,20 +6,32 @@ var React = require('react');
 var Cell = React.createClass({
   handleClick: function(e) {
     e.preventDefault();
+    this.getDOMNode().blur();
 
-    if (!this.props.gameOver) {
-      this.getDOMNode().blur();
+    if (this.props.token !== '' && !this.props.gameOver) {
+      this.props.onMessage('This cell has already been played.', true);
 
+    } else if (!this.props.gameOver) {
+      // this cell hasn't been played yet, click handler is in play...
       this.props.onClick(this.props.i);
     }
   },
 
+  /**
+   * dummy handler to prevent user input while the cpu is thinking
+   */
+  rejectClick: function(e) {
+    e.preventDefault();
+    this.getDOMNode().blur();
+  },
+
   render: function() {
     var classString = !this.props.token ? 'cell' : 'cell played';
+    var clickHandler = this.props.clickable ? this.handleClick : this.rejectClick;
 
     return (
       <input className={classString}
-            onClick={this.handleClick}
+            onClick={clickHandler}
             value={this.props.token}
             readOnly={true}/>
     );
@@ -39,7 +51,8 @@ var Board = React.createClass({
     }
 
     return {
-      moves: moves
+      moves: moves,
+      clickable: true
     };
   },
 
@@ -49,21 +62,16 @@ var Board = React.createClass({
   * @param {Number} i the index of the cell that was clicked
   */
   handleClick: function(i) {
+    this.setState({
+      clickable: false
+    });
     var newMove;
 
-    if (this.cellAlreadyPlayed(i)) {
-      // reject...
-      this.props.onMessage('That cell has already been played.', true);
-    } else if (this.props.blocking) {
-      //
-      console.log('cant play until cpu is done');
-    } else {
-      this.playCell(i);
+    this.playCell(i);
 
-      // and tell the app we have a new move...
-      newMove = this.getMove(i);
-      this.props.onMove(newMove);
-    }
+    // and tell the app we have a new move...
+    newMove = this.getMove(i);
+    this.props.onMove(newMove);
   },
 
   /**
@@ -92,14 +100,6 @@ var Board = React.createClass({
     });
   },
 
-  /**
-  * See if a cell has already been played
-  * @param {Number} i index of a cell the user wants to play
-  */
-  cellAlreadyPlayed: function(i) {
-    return this.state.moves[i] !== '';
-  },
-
   render: function() {
     var cells = this.state.moves;
 
@@ -110,9 +110,11 @@ var Board = React.createClass({
             <Cell className='cell'
                   gameOver={this.props.gameOver}
                   onClick={this.handleClick}
+                  clickable={this.state.clickable}
                   key={i}
                   i={i}
                   token={cell}
+                  onMessage={this.props.onMessage}
                   ref={'cell ' + i}/>
           );
         }, this)}
