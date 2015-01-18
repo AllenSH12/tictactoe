@@ -9,6 +9,9 @@ var App = React.createClass({
     var game = new Game();
     var cpuPlayer = new Player('O');
 
+    // track playedMoves outside of state since it won't impact UI
+    this.playedMoves = [];
+
     return {
       game: game,
       players: ['X', cpuPlayer]
@@ -20,10 +23,12 @@ var App = React.createClass({
    * move get it's choice of move and keep the game moving
    * @param {Object} newMove a generic object w/ the move to play (x & y coords as props)
    */
-  playMove: function(newMove) {
+  playMove: function(newMove, skipCpu) {
+    this.playedMoves.push(newMove);
+
     var game = this.state.game;
 
-    // want to play the move so we can then ask the GameBoard if there are any winning moves...
+    // play the move so we can ask the Game if there are any winning moves...
     game.makeMove(newMove);
 
     this.setState({
@@ -35,7 +40,7 @@ var App = React.createClass({
     if (game.isOver()) {
       // determine why the game ended (winning or full)
       this.endGame(game);
-    } else if (game.activePlayer() === 'O') {
+    } else if (game.activePlayer() === 'O' && !skipCpu) {
       // it's the cpu's turn...
       setTimeout(function() {
         var cpu = _this.state.players[1];
@@ -89,12 +94,31 @@ var App = React.createClass({
     e.preventDefault();
 
     this.showMessage('', false);
-
+    this.playedMoves = [];
     this.refs.board.setState({ clickable: true });
 
     var newGame = new Game();
     this.setState({
       game: newGame
+    });
+  },
+
+  /**
+   * show the user a replay of the last game
+   * @param {Event} e a click event to ignore
+   */
+  replayGame: function(e) {
+    var _this = this;
+    var plays = this.playedMoves.slice();
+
+    this.resetGame(e);
+
+    plays.forEach(function(play, i) {
+      var delay = i * 1000;
+
+      setTimeout(function() {
+        _this.playMove(play, true);
+      }, delay)
     });
   },
 
@@ -157,9 +181,12 @@ var App = React.createClass({
             </div>
           </div>
         </div>
-        <div className="row">
-          <div className="col-md-6 col-md-offset-3 controls">
+        <div className="row controls">
+          <div className="col-md-3 col-md-offset-3">
             <button className="btn btn-default btn-block" onClick={this.resetGame} disabled={!gameOver}>Reset</button>
+          </div>
+          <div className="col-md-3">
+            <button className="btn btn-default btn-block" onClick={this.replayGame} disabled={!gameOver}>Replay</button>
           </div>
         </div>
       </div>
