@@ -6,9 +6,10 @@ var React = require('react');
 var Cell = React.createClass({
   handleClick: function(e) {
     e.preventDefault();
-    this.getDOMNode().blur();
 
     if (!this.props.gameOver) {
+      this.getDOMNode().blur();
+
       this.props.onClick(this.props.i);
     }
   },
@@ -53,6 +54,9 @@ var Board = React.createClass({
     if (this.cellAlreadyPlayed(i)) {
       // reject...
       this.props.onMessage('That cell has already been played.', true);
+    } else if (this.props.blocking) {
+      //
+      console.log('cant play until cpu is done');
     } else {
       this.playCell(i);
 
@@ -93,14 +97,14 @@ var Board = React.createClass({
   * @param {Number} i index of a cell the user wants to play
   */
   cellAlreadyPlayed: function(i) {
-    return this.state.moves.indexOf(i) >= 0;
+    return this.state.moves[i] !== '';
   },
 
   render: function() {
     var cells = this.state.moves;
 
     return (
-      <div className="gameBoard">
+      <div className={this.props.blocking ? "gameBoard inactive" : "gameBoard"}>
         {cells.map(function(cell, i) {
           return (
             <Cell className='cell'
@@ -112,6 +116,10 @@ var Board = React.createClass({
                   ref={'cell ' + i}/>
           );
         }, this)}
+        <div className={this.props.blocking ? 'spinner active' : 'spinner'}>
+          <div className="cube1"></div>
+          <div className="cube2"></div>
+        </div>
       </div>
     );
   }

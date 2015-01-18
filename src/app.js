@@ -89,42 +89,49 @@ var App = React.createClass({
     var winner = this.state.game.winner;
     var tieGame = gameOver && !winner;
 
-    var lBumperStr = 'bumper bumperLeft';
-    var rBumperStr = 'bumper bumperRight';
-    var leftBumperClassString = activePlayer === 'X' ? lBumperStr + ' active' : lBumperStr;
-    var rightBumperClassString = activePlayer === 'O' ? rBumperStr + ' active' : rBumperStr;
-    var spinnerClassString = activePlayer === 'O' && !gameOver ? 'spinner active' : 'spinner';
+    var blocking = activePlayer === 'O' && !gameOver;
+
+    var playerClass = 'player';
+    var humanPlayerClass = (activePlayer === 'X') ? playerClass + ' active' : playerClass;
+    var cpuPlayerClass = (activePlayer === 'O') ? playerClass + ' active' : playerClass;
 
     if (gameOver) {
-      leftBumperClassString = winner === 'X' || tieGame ? lBumperStr + ' active' : lBumperStr;
-      rightBumperClassString = winner === 'O' || tieGame ? rBumperStr + ' active' : rBumperStr;
+      humanPlayerClass = (winner === 'X' || tieGame) ? playerClass + ' winner' : playerClass;
+      cpuPlayerClass = (winner === 'O' || tieGame) ? playerClass + ' winner' : playerClass;
     }
 
     return (
       <div className="app">
-        <div className="player">
-          <h3 className="playerName">Human</h3>
-        </div>
-        <div className="gameBoard">
-          <div className={leftBumperClassString}></div>
-          <div id="board">
-            <Board ref={'board'}
-                    size={this.state.game.size}
-                    activeToken={activePlayer}
-                    onMessage={this.showMessage}
-                    onMove={this.playMove}
-                    gameOver={gameOver}/>
-          </div>
-          <div className={rightBumperClassString}></div>
-        </div>
-        <div className="player">
-          <h3 className="playerName">Computer</h3>
-          <div className={spinnerClassString}>
-            <div className="cube1"></div>
-            <div className="cube2"></div>
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-3 col-md-offset-3">
+              <div className={humanPlayerClass}>
+                <h4 className="playerTitle">Player - 'X'</h4>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <div className={cpuPlayerClass}>
+                <h4 className="playerTitle">Computer - 'O'</h4>
+              </div>
+            </div>
           </div>
         </div>
-        <p id="alert">That cell has already been played.</p>
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-6 col-md-offset-3">
+              <div className="gameContainer">
+                <Board ref={'board'}
+                      size={this.state.game.size}
+                      activeToken={activePlayer}
+                      onMessage={this.showMessage}
+                      onMove={this.playMove}
+                      gameOver={gameOver}
+                      blocking={blocking}/>
+                <p id="alert">That cell has already been played.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
